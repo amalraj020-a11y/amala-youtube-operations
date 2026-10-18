@@ -10,7 +10,7 @@ This is a local, approval-gated extension for Amala. It does not alter the exist
 - Google Sheets automatic synchronization is implemented but **not connected**: application default credentials with Sheets scope are not available here.
 - Groq is **not connected**: no `GROQ_API_KEY` was available. The code does not make a model request without it.
 - Piper is **not available on PATH**. The voice stage accepts an existing WAV file or configured Piper binary and model.
-- A [private GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations) was created. Code push and scheduled daily execution are still pending. See [audit and blockers](docs/AUDIT.md).
+- The source and sample tests are in the [GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations). Scheduled daily execution is still pending. See [audit and blockers](docs/AUDIT.md).
 
 ## Run locally
 
@@ -31,7 +31,7 @@ python amala_youtube.py stage 2026-10-18 metadata --title "Accurate title for re
 
 Stages require the prior stage. `progress.json` stores status, timestamps and retry counts; completed stages are skipped on rerun. `--force` explicitly reruns one stage. Every transition is appended to `data/sheet-queue.jsonl`, which remains durable if Sheets is unavailable. Do not delete this queue until its contents have been backed up.
 
-`qa` checks media streams, dimensions and duration. It records human checks as pending. The generated SRT has one coarse cue and needs timing review. A successful technical test does **not** produce `final.mp4` or authorize upload. `metadata` prepares a review package only. There is no public upload command.
+`qa` checks media streams, dimensions and duration. It records human checks as pending. The generated SRT segments captions and needs timing review. A successful technical test does **not** produce `final.mp4` or authorize upload. `metadata` prepares a review package only. There is no public upload command.
 
 ## Google Sheets synchronization
 
