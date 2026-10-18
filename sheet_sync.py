@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent
 QUEUE = ROOT / "data" / "sheet-queue.jsonl"
 SHEET = "Operations Events"
 HEADERS = ["Key", "Date", "Time block", "Task", "Description", "Tools used", "Expected output", "Actual output path", "Start time IST", "Completion time IST", "Status", "Error or blocker", "Retry count", "Approval status", "YouTube video title", "Upload status", "Actual upload time IST", "Video URL", "GitHub repository", "Commit hash", "Notes"]
-STAGE_ROW = {"research": 4, "script": 5, "voice": 6, "graphics": 7, "assemble": 9, "qa": 10, "metadata": 11}
+STAGE_ROW = {"research": 4, "script": 5, "voice": 6, "graphics": 7, "assemble": 9, "qa": 10, "metadata": 11, "upload": 12}
 
 
 def pending_events():
@@ -34,10 +34,12 @@ def schedule():
 def row_for(event, schedule_rows):
     from amala_youtube import state
     date, stage = event["date"], event["stage"]
-    item = state(date)["stages"][stage]
+    day = state(date)
+    item = day["upload"] if stage == "upload" else day["stages"][stage]
     plan = schedule_rows[STAGE_ROW[stage] - 1]
-    upload = state(date)["upload"]
-    return [event["key"], date, plan["Time (IST)"], plan["Workstream"], plan["What Amala does"], plan["Tools"], plan["Expected file / evidence"], "; ".join(item.get("outputs", [])), item.get("started_at", ""), item.get("completed_at", ""), item["status"], item.get("note", ""), item.get("retry_count", 0), upload.get("approval", "PENDING"), "", upload.get("status", "NOT_UPLOADED"), "", "", "", "", ""]
+    upload = day["upload"]
+    outputs = event.get("outputs", item.get("outputs", []))
+    return [event["key"], date, plan["Time (IST)"], plan["Workstream"], plan["What Amala does"], plan["Tools"], plan["Expected file / evidence"], "; ".join(outputs), item.get("started_at", ""), item.get("completed_at", ""), event["status"], item.get("note", ""), item.get("retry_count", 0), upload.get("approval", "PENDING"), upload.get("title", ""), upload.get("status", "NOT_UPLOADED"), "", upload.get("url", ""), "https://github.com/amalraj020-a11y/amala-youtube-operations", upload.get("commit_hash", ""), "Published date shown in Studio: " + upload.get("published_date_ist", "") if stage == "upload" else ""]
 
 
 def sync(sheet_id, session=None):
