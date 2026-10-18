@@ -13,7 +13,7 @@
 | Backups | Six `openclaw.json` backup variants were observed. No live OpenClaw config was modified. |
 | Scheduler | No matching Windows Scheduled Task was found in the available query. Existing OpenClaw cron state was not verified. No new task was installed. |
 | Google | The workbook was imported into a native Google Sheet under the explicitly selected Amala Raj account. Browser access does not grant local API credentials. |
-| GitHub | GitHub CLI saved account token is invalid. The inspected existing local repositories had no configured remote. Raj authorized a new private repository at `amalraj020-a11y/amala-youtube-operations`; it was created in the signed-in browser. No code push is yet confirmed. |
+| GitHub | GitHub CLI saved account token is invalid. The inspected existing local repositories had no configured remote. A repository was created at `amalraj020-a11y/amala-youtube-operations`, and source plus sample tests were committed through the signed-in browser. |
 | Workspace | Windows ACL denied writes to `D:\Openclaw`, including after a sandbox escalation. Project files were created in the other authorized writable task directory. This is not a durable installed location for a scheduler. |
 
 ## Blockers and exact next actions
@@ -22,10 +22,10 @@
 2. Verify the actual Groq account is Free, create or choose a free-tier API key, and set `GROQ_API_KEY` in the protected environment visible to the gateway. Then use the official OpenClaw Groq provider mechanism and test latency. No key was read or changed here.
 3. Install Piper and a permitted voice model from an official source, or provide an approved narration WAV. The current test used a synthetic tone, not narration.
 4. Configure Google Application Default Credentials with Sheets scope for the Amala Raj account; then run `sheet_sync.py` and verify a real row update. No local API authorization was available in this run.
-5. Renew `gh auth` or another authorized Git credential for `amalraj020-a11y/amala-youtube-operations`, then push the reviewed code to `main` and verify the commit. Browser authentication did not authorize Git CLI.
+5. Renew `gh auth` or another authorized Git credential for `amalraj020-a11y/amala-youtube-operations` for future CLI pushes. Browser authentication did not authorize Git CLI.
 6. Verify YouTube Studio/channel authorization and complete human QA and owner approval before any public upload. No upload has occurred.
 7. After a durable install, inspect OpenClaw cron and Windows Task Scheduler again, register one nonduplicate schedule with the intended service account, and test a scheduled run.
 
 ## Test evidence
 
-`python -m unittest discover -s tests -v`: 3 tests passed. One tested failure, retained earlier progress, recovery and completed-stage skipping. One rendered a six-second 1080×1920 MP4 with video and audio streams using synthetic test audio. One verified that a retried event updates the same Sheet row in a fake API session. No external AI, messaging, live Google API write, YouTube, GitHub push or scheduled execution test passed; those remain untested.
+`python -m unittest discover -s tests -v`: 3 tests passed. One tested failure, retained earlier progress, recovery and completed-stage skipping. One rendered a six-second 1080×1920 MP4 with video and audio streams using synthetic test audio. One verified that a retried event updates the same Sheet row in a fake API session. No external AI, messaging, live Google API write, YouTube upload or scheduled execution test passed; those remain untested.
