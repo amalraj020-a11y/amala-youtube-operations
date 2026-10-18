@@ -61,6 +61,18 @@ def record(date, stage, status, note="", outputs=None):
         handle.write(json.dumps({"key": f"{date}:{stage}", "date": date, "stage": stage, "status": status, "timestamp_ist": item["updated_at"], "outputs": item.get("outputs", []), "retry_count": item["retry_count"], "note": item["note"]}, ensure_ascii=False) + "\n")
 
 
+def record_upload(date, url, title):
+    if not url.startswith(("https://youtube.com/shorts/", "https://www.youtube.com/watch?v=")):
+        raise ValueError("A confirmed YouTube video URL is required")
+    data = state(date)
+    data["upload"] = {"status": "PUBLISHED", "approval": "APPROVED", "title": title, "url": url, "recorded_at_ist": now(), "published_date_ist": date}
+    save_json(folder(date) / "progress.json", data)
+    queue = ROOT / "data" / "sheet-queue.jsonl"
+    queue.parent.mkdir(parents=True, exist_ok=True)
+    with queue.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"key": f"{date}:upload", "date": date, "stage": "upload", "status": "COMPLETED", "timestamp_ist": data["upload"]["recorded_at_ist"], "outputs": [url], "retry_count": 0, "note": "Public video verified in YouTube Studio"}, ensure_ascii=False) + "\n")
+
+
 def require(path):
     if not path.is_file() or path.stat().st_size == 0:
         raise ValueError(f"Required nonempty file missing: {path}")
@@ -153,7 +165,7 @@ def voice(path, args):
         raise ValueError("Narration too short")
     srt = path / "captions.srt"
     words = transcript.read_text(encoding="utf-8").split()
-    chunks = [words[i:i + 7] for i in range(0, len(words), 7)]
+    chunks = [words[i:i + 4] for i in range(0, len(words), 4)]
     cues = []
     for index, chunk in enumerate(chunks):
         start = length * index / len(chunks)
@@ -213,7 +225,7 @@ def assemble(path, args):
     lines.append(f"file '{images[-1].as_posix()}'")
     concat.write_text("\n".join(lines) + "\n", encoding="utf-8")
     draft = path / "draft.mp4"
-    command(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-safe", "0", "-f", "concat", "-i", str(concat), "-i", str(audio), "-vf", "fps=30,scale=1080:1920,subtitles=captions.srt:force_style='FontName=Arial,Fontsize=26,Outline=2,MarginV=120',format=yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", str(draft)], cwd=path)
+    command(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-safe", "0", "-f", "concat", "-i", str(concat), "-i", str(audio), "-vf", "fps=30,scale=1080:1920,subtitles=captions.srt:force_style='FontName=Arial,Fontsize=12,Outline=1,MarginV=35',format=yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", str(draft)], cwd=path)
     return [draft]
 
 
@@ -251,7 +263,15 @@ def main():
         runner.add_argument("--" + option)
     runner.add_argument("--force", action="store_true")
     sub.add_parser("status").add_argument("date")
+    uploaded = sub.add_parser("record-upload", help="Record a verified, owner-approved YouTube publication")
+    uploaded.add_argument("date")
+    uploaded.add_argument("--url", required=True)
+    uploaded.add_argument("--title", required=True)
     args = parser.parse_args()
+    if args.command == "record-upload":
+        record_upload(args.date, args.url, args.title)
+        print(json.dumps(state(args.date)["upload"], indent=2))
+        return 0
     data = state(args.date)
     if args.command == "status":
         print(json.dumps(data, indent=2))
