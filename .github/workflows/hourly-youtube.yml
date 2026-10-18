@@ -1,0 +1,56 @@
+name: Amala hourly YouTube Short
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish publicly to YouTube"
+        type: boolean
+        required: true
+        default: false
+
+concurrency:
+  group: amala-hourly-youtube
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  create-short:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GROQ_MODEL: qwen/qwen3.8-27b
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install free media tools
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng ffmpeg fonts-dejavu-core
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+      - name: Generate, validate and optionally publish
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then
+            python scripts/hourly_cloud.py --publish
+          else
+            python scripts/hourly_cloud.py
+          fi
+      - name: Save evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amala-hourly-${{ github.run_id }}
+          path: hourly-output/
+          retention-days: 3
+          if-no-files-found: warn
