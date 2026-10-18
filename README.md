@@ -6,11 +6,12 @@ This is a local, approval-gated extension for Amala. It does not alter the exist
 
 - The imported operations workbook is a live Google Sheet in the Amala Raj account: https://docs.google.com/spreadsheets/d/1X0Zkn0JHzXhLUq7aCFdsAopoOephhvAdCT2Y1SgCb3w/edit
 - The original five tabs were preserved. `Operations Events` adds the requested event fields. Spreadsheet locale is India and time zone is India Standard Time.
-- Local stages are implemented and tested with safe sample data. No real video has been approved or uploaded.
+- Local stages are implemented and tested. Two owner-approved public Shorts are live: [largest files](https://youtube.com/shorts/8gNksgap2-o) and [duplicate files](https://youtube.com/shorts/umSJXBdLqzY). See the [daily reports](docs/reports).
+- The `YouTube Upload Log` and `Operations Events` tabs contain verified publication rows. Local Sheets API access is still pending.
 - Google Sheets automatic synchronization is implemented but **not connected**: application default credentials with Sheets scope are not available here.
 - Groq is **not connected**: no `GROQ_API_KEY` was available. The code does not make a model request without it.
-- Piper is **not available on PATH**. The voice stage accepts an existing WAV file or configured Piper binary and model.
-- The source and sample tests are in the [GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations). Scheduled daily execution is still pending. See [audit and blockers](docs/AUDIT.md).
+- Piper is **not available on PATH**. Both published videos used local Windows System.Speech narration. The voice stage also accepts an existing WAV file or configured Piper binary and model.
+- The source, examples, graphic builders, and production reports are in the [GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations). Scheduled daily execution is still pending. See [audit and blockers](docs/AUDIT.md).
 
 ## Run locally
 
@@ -46,7 +47,7 @@ To enable unattended sync, Raj must authorize a suitable Google OAuth client for
 
 ## Approval and upload
 
-Open `draft.mp4`, `captions.srt`, `asset-sources.md`, `qa-checklist.md`, and `upload-metadata.md`. Correct factual, visual, audio, rights or privacy issues first. Raj's explicit approval is required before any public release. Use YouTube Studio or an authorized YouTube Data API client after authorization; record the real video ID and upload time only after confirmation. The current code intentionally has no automated upload action.
+Open `draft.mp4`, `captions.srt`, `asset-sources.md`, `qa-checklist.md`, and `upload-metadata.md`. Correct factual, visual, audio, rights or privacy issues first. Raj's explicit approval is required before any public release. Use YouTube Studio or an authorized YouTube Data API client after authorization; record the real video URL and publication date only after confirmation. `python amala_youtube.py record-upload YYYY-MM-DD --url URL --title TITLE` records verified publication. The current code intentionally has no automated upload action.
 
 Google's current [YouTube Data API quota reference](https://developers.google.com/youtube/data/determine_quota_cost) lists a separate default bucket of 100 `videos.insert` calls per day; [upload authorization](https://developers.google.com/youtube/documentation/authentication) requires OAuth access to the channel. The actual project quota and account access have not been verified here.
 
