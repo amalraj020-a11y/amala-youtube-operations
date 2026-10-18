@@ -1,0 +1,13 @@
+.env
+*.token.json
+credentials*.json
+secrets/
+data/
+daily/
+youtube/
+*.mp4
+*.wav
+*.png
+__pycache__/
+tests/.tmp/
+google-sheet.png
