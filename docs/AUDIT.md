@@ -20,12 +20,12 @@
 
 1. Give the agent or Raj's user write access to a durable project directory, preferably `D:\Openclaw`, then move and retest this project there before scheduling.
 2. Verify the actual Groq account is Free, create or choose a free-tier API key, and set `GROQ_API_KEY` in the protected environment visible to the gateway. Then use the official OpenClaw Groq provider mechanism and test latency. No key was read or changed here.
-3. Install Piper and a permitted voice model from an official source, or provide an approved narration WAV. The current test used a synthetic tone, not narration.
-4. Configure Google Application Default Credentials with Sheets scope for the Amala Raj account; then run `sheet_sync.py` and verify a real row update. No local API authorization was available in this run.
+3. Install Piper and a permitted voice model from an official source if desired. The baseline test used a synthetic tone; the two public Shorts used local Windows System.Speech narration.
+4. Configure Google Application Default Credentials with Sheets scope for the Amala Raj account; then run `sheet_sync.py` and verify a real row update. Both publication rows were entered manually, but no local API authorization was available.
 5. Renew `gh auth` or another authorized Git credential for `amalraj020-a11y/amala-youtube-operations` for future CLI pushes. Browser authentication did not authorize Git CLI.
-6. Verify YouTube Studio/channel authorization and complete human QA and owner approval before any public upload. No upload has occurred.
+6. YouTube Studio/channel authorization and owner approval were confirmed for two public Shorts on 2026-10-18 and 2026-10-19. Continue human QA and explicit approval before each future public upload. Phone verification is still needed for custom thumbnails, clickable external links, and related Shorts.
 7. After a durable install, inspect OpenClaw cron and Windows Task Scheduler again, register one nonduplicate schedule with the intended service account, and test a scheduled run.
 
 ## Test evidence
 
-`python -m unittest discover -s tests -v`: 3 tests passed. One tested failure, retained earlier progress, recovery and completed-stage skipping. One rendered a six-second 1080×1920 MP4 with video and audio streams using synthetic test audio. One verified that a retried event updates the same Sheet row in a fake API session. No external AI, messaging, live Google API write, YouTube upload or scheduled execution test passed; those remain untested.
+`python -m unittest discover -s tests -v`: 3 tests passed. One tested failure, retained earlier progress, recovery and completed-stage skipping. One rendered a six-second 1080×1920 MP4 with video and audio streams using synthetic test audio. One verified that a retried event updates the same Sheet row in a fake API session. Two YouTube Studio publications and manual Google Sheet rows were verified. External AI, messaging, live Google API write, and scheduled execution remain untested.
