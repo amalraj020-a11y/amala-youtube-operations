@@ -29,6 +29,16 @@ class HourlyCloudTest(unittest.TestCase):
         }
         self.assertIs(hourly.validate_content(content), content)
 
+    def test_safe_non_destructive_wording_is_accepted(self):
+        content = {
+            "title": "Preview files safely",
+            "narration": " ".join(["useful"] * 75) + " This preview does not delete or remove files.",
+            "description": "A safe Python lesson.",
+            "hashtags": ["Python", "Coding", "LearnPython", "Shorts"],
+            "scenes": ["Preview first", "Read only", "Review output", "Keep files", "Subscribe"],
+        }
+        self.assertIs(hourly.validate_content(content), content)
+
 
 if __name__ == "__main__":
     unittest.main()
