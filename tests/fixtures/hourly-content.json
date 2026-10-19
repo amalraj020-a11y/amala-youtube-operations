@@ -1,0 +1,7 @@
+{
+  "title": "Preview Folder Sizes Safely with Python 🐍",
+  "narration": "Want to see which folders use the most space without changing a single file? Python can help. Start with pathlib and choose a folder you own. Walk through each file, check its size, and add the values for every top-level folder. Sort the results from largest to smallest, then print only the first five. Wrap file access in a try block so locked files do not stop the scan. This script only reads file information and prints a report. Review the results yourself before taking any action. Subscribe to Amala for practical Python tips.",
+  "description": "Learn a safe, read-only Python pattern for previewing folder sizes before making decisions.",
+  "hashtags": ["Python", "CodingTips", "Automation", "Shorts"],
+  "scenes": ["Find large folders safely", "Read sizes with pathlib", "Total each top folder", "Sort the five largest", "Preview first, decide yourself"]
+}

@@ -1,6 +1,6 @@
 # Amala YouTube operations
 
-This is a local, approval-gated extension for Amala. It does not alter the existing OpenClaw gateway, messaging sessions, Ollama models, or other workflows.
+This project contains Amala's local cartoon pipeline and a cloud pipeline for public Shorts every two hours.
 
 ## Current state
 
@@ -9,9 +9,17 @@ This is a local, approval-gated extension for Amala. It does not alter the exist
 - Local stages are implemented and tested. Two owner-approved public Shorts are live: [largest files](https://youtube.com/shorts/8gNksgap2-o) and [duplicate files](https://youtube.com/shorts/umSJXBdLqzY). See the [daily reports](docs/reports).
 - The `YouTube Upload Log` and `Operations Events` tabs contain verified publication rows. Local Sheets API access is still pending.
 - Google Sheets automatic synchronization is implemented but **not connected**: application default credentials with Sheets scope are not available here.
-- Groq is **not connected**: no `GROQ_API_KEY` was available. The code does not make a model request without it.
+- Groq is connected to GitHub Actions through the protected `GROQ_API_KEY` secret. Secrets are never committed.
 - Piper is **not available on PATH**. Both published videos used local Windows System.Speech narration. The voice stage also accepts an existing WAV file or configured Piper binary and model.
-- The source, examples, graphic builders, and production reports are in the [GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations). Scheduled daily execution is still pending. See [audit and blockers](docs/AUDIT.md).
+- The source, examples, graphic builders, workbook, and production reports are in the [GitHub repository](https://github.com/amalraj020-a11y/amala-youtube-operations). See [audit and blockers](docs/AUDIT.md).
+
+## Public publishing every two hours without OpenAI
+
+`.github/workflows/hourly-youtube.yml` runs at minute 17 every two hours on a standard GitHub-hosted runner. `scripts/hourly_cloud.py` uses Groq with the non-OpenAI Qwen model `qwen/qwen3.8-27b`, creates original cards with Pillow, creates narration with the free open-source `espeak-ng` engine, renders with FFmpeg, validates the media, and uploads through the official YouTube Data API. A manual workflow run defaults to generation-only test mode. Scheduled runs publish publicly once YouTube OAuth secrets are configured.
+
+Four GitHub Actions secrets are required before scheduled runs can succeed: `GROQ_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`. The Google OAuth token must belong to the intended Amala channel and include the `youtube.upload` scope. Never commit these values. The workflow marks the upload as containing synthetic media, sets made-for-kids to false, suppresses subscriber notification for hourly frequency, and saves generation evidence for three days.
+
+GitHub schedules are best-effort and may be delayed under high load. Publishing every two hours uses up to 12 YouTube video-upload calls per day, so the Google Cloud project must have sufficient quota. Free Groq limits and model availability can change. The workflow fails closed when generation, content validation, media QA, OAuth, or upload fails.
 
 ## Run locally
 
@@ -58,3 +66,16 @@ Read `python amala_youtube.py status YYYY-MM-DD`, resolve the failed stage's not
 ## Cost policy
 
 No payment method, paid plan, trial, credits, or hosted resource was activated by this project. Local electricity and internet costs still exist. Verify the actual Groq account is on its Free plan and its current limits before setting `GROQ_API_KEY`. See the [official Groq Free limits](https://console.groq.com/docs/rate-limits), [OpenClaw Groq setup](https://docs.openclaw.ai/providers/groq), and [Sheets API limits](https://developers.google.com/workspace/sheets/api/limits).
+# AMALA CODE QUEST
+
+The repository includes a zero-cost, no-OpenAI cartoon pilot pipeline. It draws original characters with Pillow, generates narration locally, renders with FFmpeg, burns in captions, validates the MP4, and stops for human review. The pilot used neither OpenAI nor Groq.
+
+Run the pilot on Windows:
+
+```powershell
+python scripts/code_quest.py
+```
+
+Review output is written to `code-quest-output/episode-001/`. The pilot build is manual so it cannot repeatedly create the same episode. The separate cloud workflow creates and publishes a new Short every two hours.
+
+See `docs/CODE_QUEST_AUDIT.md` for verified environment, voice, security, and integration status.

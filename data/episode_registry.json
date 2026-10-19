@@ -1,0 +1,11 @@
+{
+  "episodes": [
+    {
+      "episode": 1,
+      "topic": "What Is Full-Stack Development?",
+      "status": "awaiting_human_review",
+      "video": "code-quest-output/episode-001/amala-code-quest-001.mp4",
+      "published": {}
+    }
+  ]
+}

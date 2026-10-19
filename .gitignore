@@ -1,4 +1,8 @@
 .env
+code-quest-output/
+hourly-output/
+client_secret*.json
+token*.json
 *.token.json
 credentials*.json
 secrets/

@@ -1,0 +1,7 @@
+{
+  "series": "AMALA CODE QUEST",
+  "week_1": ["What is full-stack development?", "What is frontend development?", "What is backend development?", "What is a database?", "What is HTML?", "What is CSS?", "What is JavaScript?"],
+  "week_2": ["The DOM", "UI components", "React basics", "Props", "State", "Events", "Calling APIs", "Frontend debugging"],
+  "week_3": ["Node.js", "Express", "HTTP", "REST APIs", "Authentication", "Error handling", "Security fundamentals"],
+  "week_4": ["MongoDB", "CRUD create", "CRUD read", "CRUD update and delete", "Connect frontend and backend", "Deployment basics", "Common full-stack mistakes", "Build a tiny full-stack project"]
+}

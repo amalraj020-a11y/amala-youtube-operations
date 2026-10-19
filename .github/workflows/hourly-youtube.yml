@@ -1,8 +1,8 @@
-name: Amala hourly YouTube Short
+name: Amala YouTube Short every 2 hours
 
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 */2 * * *"
   workflow_dispatch:
     inputs:
       publish:
@@ -12,7 +12,7 @@ on:
         default: false
 
 concurrency:
-  group: amala-hourly-youtube
+  group: amala-youtube-every-two-hours
   cancel-in-progress: false
 
 permissions:
@@ -38,7 +38,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y espeak-ng ffmpeg fonts-dejavu-core
       - name: Install Python packages
         run: pip install -r requirements.txt
-      - name: Generate, validate and optionally publish
+      - name: Generate, validate and publish
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then

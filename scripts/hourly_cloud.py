@@ -79,7 +79,14 @@ The final narration sentence must invite viewers to subscribe for practical Pyth
         req = Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps(payload).encode(),
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "amala-youtube-operations/1.0"},
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                # Groq's edge rejects urllib's default Python-urllib user agent
+                # from some shared cloud runner IPs with Cloudflare error 1010.
+                "User-Agent": "amala-youtube-operations/1.0",
+            },
             method="POST",
         )
         try:

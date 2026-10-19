@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "mp4_exists": true,
+    "vertical_1080x1920": true,
+    "video_h264": true,
+    "audio_present": true,
+    "duration_matches_audio": true,
+    "private_review_only": true,
+    "captions_burned_in": true
+  },
+  "duration_seconds": 35.26,
+  "size_bytes": 1354167,
+  "voice_engine": "Microsoft Zira Desktop via Windows SAPI",
+  "voice_sample": "code-quest-output/episode-001/voice-zira.wav",
+  "openai_used": false,
+  "published": false,
+  "groq_used": false
+}
