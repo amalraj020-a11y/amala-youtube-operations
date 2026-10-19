@@ -19,6 +19,16 @@ class HourlyCloudTest(unittest.TestCase):
         content = json.loads(fixture.read_text(encoding="utf-8"))
         self.assertEqual(hourly.validate_content(content)["title"], content["title"])
 
+    def test_small_model_word_count_variation_is_accepted(self):
+        content = {
+            "title": "Safe Python tip",
+            "narration": " ".join(["useful"] * 126),
+            "description": "A safe Python lesson.",
+            "hashtags": ["Python", "Coding", "LearnPython", "Shorts"],
+            "scenes": ["One", "Two", "Three", "Four", "Five"],
+        }
+        self.assertIs(hourly.validate_content(content), content)
+
 
 if __name__ == "__main__":
     unittest.main()

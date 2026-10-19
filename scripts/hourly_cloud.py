@@ -108,8 +108,11 @@ def validate_content(content: dict) -> dict:
     if len(str(content["title"])) > 70:
         raise ValueError("Title exceeds 70 characters")
     word_count = len(str(content["narration"]).split())
-    if not 70 <= word_count <= 125:
-        raise ValueError(f"Narration has {word_count} words; expected 70-125")
+    # Allow a small cushion above the prompt's 115-word target. Models can
+    # count punctuation-bound words differently, and a harmless one-word
+    # variation should not stop the entire scheduled publishing job.
+    if not 70 <= word_count <= 130:
+        raise ValueError(f"Narration has {word_count} words; expected 70-130")
     if not isinstance(content["scenes"], list) or len(content["scenes"]) != 5:
         raise ValueError("Exactly five scenes are required")
     if not isinstance(content["hashtags"], list) or not 3 <= len(content["hashtags"]) <= 6:
