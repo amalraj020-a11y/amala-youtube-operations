@@ -79,7 +79,7 @@ The final narration sentence must invite viewers to subscribe for practical Pyth
         req = Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps(payload).encode(),
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "amala-youtube-operations/1.0"},
             method="POST",
         )
         try:
