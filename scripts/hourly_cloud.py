@@ -60,8 +60,9 @@ def groq_json(topic: str) -> dict:
     if not key:
         raise RuntimeError("GROQ_API_KEY is missing")
     prompt = f"""Create one original 35-50 second faceless YouTube Short about: {topic}.
-Return JSON only with keys title, narration, description, hashtags, scenes.
+Return JSON only with keys title, narration, description, hashtags, scenes, code_lines.
 Rules: title <= 70 characters; narration 80-105 words (count carefully and never exceed 105); exactly 5 scenes; each scene <= 7 words;
+code_lines is an array of 2-5 short Python lines that match the lesson and never delete or modify files;
 hashtags is an array of 4 useful tags; teach a safe Python technique; never claim guaranteed results;
 never delete or modify user files; no copied quotes, music, brands, news, or unverifiable statistics.
 The final narration sentence must invite viewers to subscribe for practical Python tips."""
@@ -147,18 +148,56 @@ def font(size: int):
 
 def render_cards(content: dict, out: Path) -> list[Path]:
     cards = []
+    palettes = [
+        ("#071426", "#0d3152", "#36d1ff"),
+        ("#180b2d", "#43206b", "#d56bff"),
+        ("#071f1a", "#124f43", "#43f0b4"),
+        ("#291207", "#663516", "#ffad42"),
+        ("#11152e", "#293f79", "#79a7ff"),
+    ]
+    code_lines = [str(line)[:42] for line in content.get("code_lines", [])][:5]
     for number, text in enumerate(content["scenes"], 1):
-        image = Image.new("RGB", (1080, 1920), "#08162e")
+        background, panel, accent = palettes[number - 1]
+        image = Image.new("RGB", (1080, 1920), background)
         draw = ImageDraw.Draw(image)
-        draw.rounded_rectangle((70, 100, 1010, 1820), 55, fill="#10264b", outline="#43c6ff", width=8)
-        draw.text((100, 180), "AMALA  •  PYTHON IN 1 MINUTE", font=font(42), fill="#43c6ff")
+        # Layered shapes remain readable during MoneyPrinterTurbo's pan/zoom motion.
+        draw.ellipse((-180, -120, 520, 580), fill=panel)
+        draw.ellipse((700, 1370, 1280, 2020), fill=panel)
+        for stripe in range(0, 1920, 64):
+            draw.line((0, stripe, 1080, stripe + 240), fill="#26384a", width=2)
+        draw.rounded_rectangle((58, 86, 1022, 1795), 58, fill=panel, outline=accent, width=7)
+        draw.rounded_rectangle((96, 145, 984, 245), 28, fill=background)
+        draw.text((125, 171), "AMALA  •  PYTHON SHORTS", font=font(38), fill=accent)
+        draw.ellipse((865, 159, 925, 219), outline=accent, width=8)
+        draw.line((895, 173, 895, 205), fill=accent, width=7)
+        draw.line((881, 189, 909, 189), fill=accent, width=7)
+
+        # A large animated focal badge gives every scene a distinct visual anchor.
+        draw.rounded_rectangle((130, 330, 950, 570), 48, fill=background, outline=accent, width=5)
+        draw.text((180, 365), f"STEP  {number}", font=font(45), fill=accent)
+        draw.rectangle((180, 465, 180 + number * 125, 495), fill=accent)
+        draw.rectangle((180 + number * 125, 465, 805, 495), fill="#5b6f88")
         wrapped = textwrap.wrap(str(text), width=17)[:5]
-        y = 600 - (len(wrapped) - 1) * 55
+        y = 650
         for line in wrapped:
             box = draw.textbbox((0, 0), line, font=font(84))
             draw.text(((1080 - (box[2] - box[0])) / 2, y), line, font=font(84), fill="white")
             y += 115
-        draw.text((100, 1680), f"{number}/5   @Amala", font=font(42), fill="#9ce8ff")
+
+        if code_lines:
+            draw.rounded_rectangle((120, 1050, 960, 1485), 36, fill="#050b14", outline="#60738b", width=3)
+            draw.ellipse((160, 1090, 184, 1114), fill="#ff5f56")
+            draw.ellipse((200, 1090, 224, 1114), fill="#ffbd2e")
+            draw.ellipse((240, 1090, 264, 1114), fill="#27c93f")
+            for index, line in enumerate(code_lines[:4], 1):
+                draw.text((165, 1160 + (index - 1) * 70), f"{index:>2}  {line}", font=font(31), fill="#d9f3ff")
+        else:
+            draw.rounded_rectangle((180, 1110, 900, 1390), 44, fill=background, outline=accent, width=4)
+            draw.text((265, 1190), "{  SAFE CODE  }", font=font(48), fill=accent)
+
+        draw.text((115, 1660), f"{number}/5", font=font(42), fill=accent)
+        draw.text((760, 1660), "@Amala", font=font(42), fill="white")
+        draw.text((115, 1725), "SAVE  •  TRY  •  SUBSCRIBE", font=font(32), fill="#d3deea")
         path = out / f"scene-{number:02}.png"
         image.save(path)
         cards.append(path)
@@ -204,12 +243,14 @@ def moneyprinter_command(content: dict, cards: list[Path]) -> list[str]:
         "--video-aspect", "9:16",
         "--video-concat-mode", "sequential",
         "--image-motion", "zoom",
-        "--video-transition-mode", "fade-in",
+        "--video-transition-mode", "shuffle",
         "--voice-name", os.environ.get("MPT_VOICE", "en-US-AriaNeural"),
         "--voice-rate", "1.08",
         "--bgm-type", "none",
         "--subtitle-enabled",
         "--subtitle-position", "bottom",
+        "--subtitle-display-mode", "word_by_word",
+        "--subtitle-animation", "pop_spring",
         "--subtitle-background-enabled",
         "--rounded-subtitle-background",
         "--stop-at", "video",

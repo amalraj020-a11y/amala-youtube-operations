@@ -61,6 +61,9 @@ class HourlyCloudTest(unittest.TestCase):
         self.assertIn("--video-source local", joined)
         self.assertIn("--bgm-type none", joined)
         self.assertIn("--voice-name en-US-AriaNeural", joined)
+        self.assertIn("--subtitle-display-mode word_by_word", joined)
+        self.assertIn("--subtitle-animation pop_spring", joined)
+        self.assertIn("--video-transition-mode shuffle", joined)
         self.assertNotIn("pexels", joined.lower())
         self.assertNotIn("openai", joined.lower())
 
