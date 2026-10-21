@@ -61,7 +61,7 @@ def groq_json(topic: str) -> dict:
         raise RuntimeError("GROQ_API_KEY is missing")
     prompt = f"""Create one original 35-50 second faceless YouTube Short about: {topic}.
 Return JSON only with keys title, narration, description, hashtags, scenes.
-Rules: title <= 70 characters; narration 80-115 words; exactly 5 scenes; each scene <= 7 words;
+Rules: title <= 70 characters; narration 80-105 words (count carefully and never exceed 105); exactly 5 scenes; each scene <= 7 words;
 hashtags is an array of 4 useful tags; teach a safe Python technique; never claim guaranteed results;
 never delete or modify user files; no copied quotes, music, brands, news, or unverifiable statistics.
 The final narration sentence must invite viewers to subscribe for practical Python tips."""
@@ -124,6 +124,18 @@ def validate_content(content: dict) -> dict:
     if blocked.search(str(content["narration"])):
         raise ValueError("Narration contains a blocked misleading claim")
     return content
+
+
+def generate_valid_content(topic: str, attempts: int = 3) -> dict:
+    """Regenerate a bounded number of times when an LLM misses hard limits."""
+    errors = []
+    for _ in range(attempts):
+        content = groq_json(topic)
+        try:
+            return validate_content(content)
+        except ValueError as exc:
+            errors.append(str(exc))
+    raise ValueError("Groq returned invalid content after retries: " + "; ".join(errors))
 
 
 def font(size: int):
@@ -298,9 +310,9 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     if args.content_file:
         content = json.loads(args.content_file.read_text(encoding="utf-8"))
+        validate_content(content)
     else:
-        content = groq_json(topic_for(slot))
-    validate_content(content)
+        content = generate_valid_content(topic_for(slot))
     (out / "content.json").write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     video, renderer = make_video(content, out, args.voice_file, args.renderer)
     result = {"slot": slot, "model": MODEL, "renderer": renderer, "video": str(video), "published": False}

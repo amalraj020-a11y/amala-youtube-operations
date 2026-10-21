@@ -31,6 +31,17 @@ class HourlyCloudTest(unittest.TestCase):
         }
         self.assertIs(hourly.validate_content(content), content)
 
+    def test_generation_retries_invalid_model_output(self):
+        invalid = {
+            "title": "Too long narration", "narration": "word " * 160,
+            "description": "Description", "hashtags": ["Python", "Coding", "Shorts"],
+            "scenes": ["One", "Two", "Three", "Four", "Five"],
+        }
+        valid = {**invalid, "narration": "word " * 80}
+        with patch.object(hourly, "groq_json", side_effect=[invalid, valid]) as mocked:
+            self.assertIs(hourly.generate_valid_content("topic"), valid)
+        self.assertEqual(mocked.call_count, 2)
+
     def test_safe_non_destructive_wording_is_accepted(self):
         content = {
             "title": "Preview files safely",
