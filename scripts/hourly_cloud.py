@@ -209,16 +209,16 @@ def make_moneyprinter_video(content: dict, out: Path) -> Path:
     if not shutil.which("mpt"):
         raise RuntimeError("MoneyPrinterTurbo CLI (mpt) is not installed")
     cards = render_cards(content, out)
-    mpt_home = out / "moneyprinter-home"
     result = run(*moneyprinter_command(content, cards), cwd=out)
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     try:
         payload = json.loads(lines[-1])
     except (IndexError, json.JSONDecodeError) as exc:
         raise RuntimeError("MoneyPrinterTurbo did not return its JSON result") from exc
-    videos = payload.get("videos") or []
+    task_result = payload.get("result", payload)
+    videos = task_result.get("videos") or []
     if not videos:
-        raise RuntimeError(f"MoneyPrinterTurbo failed: {payload.get('error', 'no video returned')}")
+        raise RuntimeError(f"MoneyPrinterTurbo failed: {task_result.get('error', 'no video returned')}")
     source = Path(videos[0])
     if not source.is_absolute():
         source = (out / source).resolve()

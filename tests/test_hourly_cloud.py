@@ -53,6 +53,11 @@ class HourlyCloudTest(unittest.TestCase):
         self.assertNotIn("pexels", joined.lower())
         self.assertNotIn("openai", joined.lower())
 
+    def test_moneyprinter_result_uses_cli_result_wrapper(self):
+        payload = {"task_id": "example", "result": {"videos": ["final.mp4"]}}
+        task_result = payload.get("result", payload)
+        self.assertEqual(task_result["videos"], ["final.mp4"])
+
 
 if __name__ == "__main__":
     unittest.main()
