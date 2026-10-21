@@ -153,7 +153,7 @@ def render_cards(content: dict, out: Path) -> list[Path]:
     return cards
 
 
-def make_video(content: dict, out: Path, voice_file: Path | None = None) -> Path:
+def make_simple_video(content: dict, out: Path, voice_file: Path | None = None) -> Path:
     out = out.resolve()
     narration = re.sub(r"[#*_`]", "", str(content["narration"]))
     wav = out / "voice.wav"
@@ -179,6 +179,69 @@ def make_video(content: dict, out: Path, voice_file: Path | None = None) -> Path
     if kinds != {"video", "audio"}:
         raise RuntimeError(f"Rendered media streams are invalid: {kinds}")
     return video
+
+
+def moneyprinter_command(content: dict, cards: list[Path]) -> list[str]:
+    """Build the no-paid-provider MoneyPrinterTurbo CLI invocation."""
+    return [
+        "mpt", "cli",
+        "--video-subject", str(content["title"]),
+        "--video-script", re.sub(r"[#*_`]", "", str(content["narration"])),
+        "--video-source", "local",
+        "--video-materials", ",".join(str(card.resolve()) for card in cards),
+        "--video-aspect", "9:16",
+        "--video-concat-mode", "sequential",
+        "--image-motion", "zoom",
+        "--video-transition-mode", "fade-in",
+        "--voice-name", os.environ.get("MPT_VOICE", "en-US-AriaNeural"),
+        "--voice-rate", "1.08",
+        "--bgm-type", "none",
+        "--subtitle-enabled",
+        "--subtitle-position", "bottom",
+        "--subtitle-background-enabled",
+        "--rounded-subtitle-background",
+        "--stop-at", "video",
+    ]
+
+
+def make_moneyprinter_video(content: dict, out: Path) -> Path:
+    """Render with MoneyPrinterTurbo using only local visuals and free Edge TTS."""
+    if not shutil.which("mpt"):
+        raise RuntimeError("MoneyPrinterTurbo CLI (mpt) is not installed")
+    cards = render_cards(content, out)
+    mpt_home = out / "moneyprinter-home"
+    result = run(*moneyprinter_command(content, cards), cwd=out)
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    try:
+        payload = json.loads(lines[-1])
+    except (IndexError, json.JSONDecodeError) as exc:
+        raise RuntimeError("MoneyPrinterTurbo did not return its JSON result") from exc
+    videos = payload.get("videos") or []
+    if not videos:
+        raise RuntimeError(f"MoneyPrinterTurbo failed: {payload.get('error', 'no video returned')}")
+    source = Path(videos[0])
+    if not source.is_absolute():
+        source = (out / source).resolve()
+    if not source.is_file() or source.stat().st_size == 0:
+        raise RuntimeError("MoneyPrinterTurbo returned a missing or empty video")
+    video = out / "amala-short.mp4"
+    shutil.copy2(source, video)
+    (out / "moneyprinter-result.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return video
+
+
+def make_video(content: dict, out: Path, voice_file: Path | None = None, renderer: str = "simple") -> tuple[Path, str]:
+    if renderer == "moneyprinter" and voice_file is None:
+        try:
+            return make_moneyprinter_video(content, out), "moneyprinter"
+        except Exception as exc:
+            (out / "moneyprinter-fallback.txt").write_text(
+                f"MoneyPrinterTurbo failed; used the reliable local renderer.\n{type(exc).__name__}: {exc}\n",
+                encoding="utf-8",
+            )
+    return make_simple_video(content, out, voice_file), "simple"
 
 
 def youtube_access_token() -> str:
@@ -223,6 +286,11 @@ def main() -> int:
     parser.add_argument("--slot", help="Stable UTC slot, defaults to the current hour")
     parser.add_argument("--content-file", type=Path, help="Use reviewed JSON instead of calling Groq")
     parser.add_argument("--voice-file", type=Path, help="Use an existing WAV for a local media test")
+    parser.add_argument(
+        "--renderer", choices=("simple", "moneyprinter"),
+        default=os.environ.get("VIDEO_RENDERER", "simple"),
+        help="Video renderer; MoneyPrinterTurbo falls back to the simple renderer on failure",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "hourly-output")
     args = parser.parse_args()
     slot = args.slot or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H")
@@ -234,8 +302,8 @@ def main() -> int:
         content = groq_json(topic_for(slot))
     validate_content(content)
     (out / "content.json").write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    video = make_video(content, out, args.voice_file)
-    result = {"slot": slot, "model": MODEL, "video": str(video), "published": False}
+    video, renderer = make_video(content, out, args.voice_file, args.renderer)
+    result = {"slot": slot, "model": MODEL, "renderer": renderer, "video": str(video), "published": False}
     if args.publish:
         result.update(published=True, url=upload(video, content))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

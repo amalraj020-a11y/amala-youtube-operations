@@ -1,5 +1,7 @@
 import importlib.util
+import os
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "hourly_cloud.py"
@@ -38,6 +40,18 @@ class HourlyCloudTest(unittest.TestCase):
             "scenes": ["Preview first", "Read only", "Review output", "Keep files", "Subscribe"],
         }
         self.assertIs(hourly.validate_content(content), content)
+
+    def test_moneyprinter_uses_local_assets_and_no_paid_provider(self):
+        content = {"title": "Safe Python tip", "narration": "Learn safely."}
+        cards = [Path("one.png"), Path("two.png")]
+        with patch.dict(os.environ, {"MPT_VOICE": "en-US-AriaNeural"}):
+            command = hourly.moneyprinter_command(content, cards)
+        joined = " ".join(command)
+        self.assertIn("--video-source local", joined)
+        self.assertIn("--bgm-type none", joined)
+        self.assertIn("--voice-name en-US-AriaNeural", joined)
+        self.assertNotIn("pexels", joined.lower())
+        self.assertNotIn("openai", joined.lower())
 
 
 if __name__ == "__main__":
