@@ -19,6 +19,8 @@ This project contains Amala's local cartoon pipeline and a cloud pipeline for pu
 
 MoneyPrinterTurbo is pinned to its official `mpt` PyPI package. This configuration uses `--video-source local`, so it needs no Pexels, Pixabay, or Coverr key. It uses packaged/local visuals and no background music to avoid stock API limits and music claims. Set `VIDEO_RENDERER=simple` to bypass MoneyPrinterTurbo for troubleshooting.
 
+A reviewed generation-only artifact can be published unchanged by manually running the workflow with `publish=true` and its `artifact_run_id`. The workflow downloads that exact MP4 and metadata, validates both, and uploads without regenerating the video.
+
 Four GitHub Actions secrets are required before scheduled runs can succeed: `GROQ_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`. The Google OAuth token must belong to the intended Amala channel and include the `youtube.upload` scope. Never commit these values. The workflow marks the upload as containing synthetic media, sets made-for-kids to false, suppresses subscriber notification for hourly frequency, and saves generation evidence for three days.
 
 GitHub schedules are best-effort and may be delayed under high load. Publishing every two hours uses up to 12 YouTube video-upload calls per day, so the Google Cloud project must have sufficient quota. Free Groq limits and model availability can change. The workflow fails closed when generation, content validation, media QA, OAuth, or upload fails.

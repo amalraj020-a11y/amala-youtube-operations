@@ -10,6 +10,11 @@ on:
         type: boolean
         required: true
         default: false
+      artifact_run_id:
+        description: "Optional reviewed workflow run ID to publish exactly"
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: amala-youtube-every-two-hours
@@ -17,6 +22,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   create-short:
@@ -41,8 +47,20 @@ jobs:
         run: pip install -r requirements.txt mpt==1.3.9
       - name: Generate, validate and publish
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then
+          if [[ -n "${{ inputs.artifact_run_id }}" ]]; then
+            if [[ "${{ inputs.publish }}" != "true" ]]; then
+              echo "Publishing a reviewed artifact requires publish=true" >&2
+              exit 2
+            fi
+            gh run download "${{ inputs.artifact_run_id }}" --repo "${{ github.repository }}" --dir reviewed-artifact
+            video="$(find reviewed-artifact -name amala-short.mp4 -type f -print -quit)"
+            content="$(find reviewed-artifact -name content.json -type f -print -quit)"
+            test -n "$video" && test -n "$content"
+            python scripts/hourly_cloud.py --publish --existing-video "$video" --content-file "$content" --output publish-output
+          elif [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then
             python scripts/hourly_cloud.py --publish
           else
             python scripts/hourly_cloud.py
@@ -52,6 +70,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: amala-hourly-${{ github.run_id }}
-          path: hourly-output/
+          path: |
+            hourly-output/
+            publish-output/
           retention-days: 3
           if-no-files-found: warn

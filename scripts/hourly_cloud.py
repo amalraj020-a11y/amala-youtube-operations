@@ -298,6 +298,7 @@ def main() -> int:
     parser.add_argument("--slot", help="Stable UTC slot, defaults to the current hour")
     parser.add_argument("--content-file", type=Path, help="Use reviewed JSON instead of calling Groq")
     parser.add_argument("--voice-file", type=Path, help="Use an existing WAV for a local media test")
+    parser.add_argument("--existing-video", type=Path, help="Publish an already reviewed MP4 without regenerating it")
     parser.add_argument(
         "--renderer", choices=("simple", "moneyprinter"),
         default=os.environ.get("VIDEO_RENDERER", "simple"),
@@ -305,6 +306,24 @@ def main() -> int:
     )
     parser.add_argument("--output", type=Path, default=ROOT / "hourly-output")
     args = parser.parse_args()
+    if args.existing_video:
+        if not args.publish or not args.content_file:
+            parser.error("--existing-video requires --publish and --content-file")
+        content = validate_content(json.loads(args.content_file.read_text(encoding="utf-8")))
+        video = args.existing_video.resolve()
+        if not video.is_file() or video.stat().st_size == 0:
+            parser.error("--existing-video must point to a non-empty MP4")
+        args.output.mkdir(parents=True, exist_ok=True)
+        result = {
+            "model": MODEL,
+            "renderer": "moneyprinter",
+            "video": str(video),
+            "published": True,
+            "url": upload(video, content),
+        }
+        (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result))
+        return 0
     slot = args.slot or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H")
     out = args.output / slot.replace(":", "-")
     out.mkdir(parents=True, exist_ok=True)
